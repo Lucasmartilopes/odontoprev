@@ -1,0 +1,94 @@
+# =============================================================================
+# OdontoPrev — Pipeline Azure DevOps (Sprint 2: CI + CD)
+# =============================================================================
+# Como criar no Azure DevOps:
+#   1) Pipelines → New pipeline → GitHub (ou Azure Repos) → escolha este repo
+#   2) Existing Azure Pipelines YAML file → Branch main → Path: /azure-pipelines.yml
+#   3) Save and run
+#
+# Variáveis (Pipeline → Edit → Variables) — opcionais até ativar o CD:
+#   DeployCDN = true   (só quando ACR + Web App + service connections estiverem prontos)
+#   azureSubscription = nome da Service connection ARM (Azure Resource Manager)
+#   acrServiceConnection = nome da Service connection Docker Registry (ACR)
+#   acrLoginServer = ex.: meuacr.azurecr.io
+#   webAppName = nome do App Service Linux (Web App for Containers)
+# =============================================================================
+
+trigger:
+  branches:
+    include:
+      - main
+
+pool:
+  vmImage: ubuntu-latest
+
+variables:
+  mavenFolder: odontoprev
+
+stages:
+  # ---------------------------------------------------------------------------
+  # CI — Integração contínua (sempre roda no push em main)
+  # ---------------------------------------------------------------------------
+  - stage: CI
+    displayName: CI — Build, testes e imagem Docker
+    jobs:
+      - job: BuildAndTest
+        displayName: Maven + Docker build
+        steps:
+          - checkout: self
+            fetchDepth: 0
+
+          - task: UseJavaVersion@0
+            displayName: Instalar JDK 17
+            inputs:
+              versionSpec: "17"
+              jdkArchitectureOption: x64
+
+          - script: |
+              set -e
+              cd "$(mavenFolder)"
+              bash ./mvnw -B verify
+            displayName: Maven verify (testes automatizados)
+
+          - task: Docker@2
+            displayName: Docker build (valida Dockerfile)
+            inputs:
+              command: build
+              Dockerfile: "$(Build.SourcesDirectory)/$(mavenFolder)/Dockerfile"
+              buildContext: "$(Build.SourcesDirectory)/$(mavenFolder)"
+              repository: odontoprev
+              tags: |
+                $(Build.BuildId)
+
+  # ---------------------------------------------------------------------------
+  # CD — Entrega contínua (só se variável DeployCDN = true)
+  # ---------------------------------------------------------------------------
+  - stage: CD
+    displayName: CD — Push ACR + deploy App Service (containers)
+    dependsOn: CI
+    condition: and(succeeded(), eq(variables['DeployCDN'], 'true'))
+    jobs:
+      - job: PushAndDeploy
+        displayName: Push imagem e atualizar Web App
+        steps:
+          - checkout: self
+            fetchDepth: 0
+
+          - task: Docker@2
+            displayName: Build e push para Azure Container Registry
+            inputs:
+              command: buildAndPush
+              Dockerfile: "$(Build.SourcesDirectory)/$(mavenFolder)/Dockerfile"
+              buildContext: "$(Build.SourcesDirectory)/$(mavenFolder)"
+              containerRegistry: "$(acrServiceConnection)"
+              repository: odontoprev
+              tags: |
+                $(Build.BuildId)
+                latest
+
+          - task: AzureWebAppContainer@1
+            displayName: Deploy no Azure App Service (Linux / container)
+            inputs:
+              azureSubscription: "$(azureSubscription)"
+              appName: "$(webAppName)"
+              containers: "$(acrLoginServer)/odontoprev:$(Build.BuildId)"

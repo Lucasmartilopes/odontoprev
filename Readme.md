@@ -87,7 +87,74 @@ Na pasta `odontoprev`:
 .\mvnw.cmd -B verify
 ```
 
-GitHub Actions (`.github/workflows/ci.yml`): `mvn verify` + **Docker build**. O push da imagem para ACR e o deploy no App Service exigem **secrets** da sua conta Azure (configure conforme seu laboratório).
+GitHub Actions (`.github/workflows/ci.yml`): `mvn verify` + **Docker build** (útil como CI espelhado no GitHub).
+
+---
+
+## Sprint 2 — Azure DevOps (passo a passo simples)
+
+A disciplina pede **pipeline CI/CD no Azure DevOps** (não basta só o GitHub). O arquivo principal é **`azure-pipelines.yml`** na raiz do repositório.
+
+### O que você precisa ter
+
+1. Conta no **Azure DevOps**: [https://dev.azure.com](https://dev.azure.com) (pode usar a mesma conta Microsoft do Azure).  
+2. Seu código no **GitHub** (já está).  
+3. (Opcional para o estágio **CD**) Conta **Azure** com App Service + ACR + *service connections* — só quando for gravar deploy automático.
+
+### Passos no Azure DevOps (faça nesta ordem)
+
+1. Entre em **dev.azure.com** e crie uma **Organization** (se ainda não tiver).  
+2. Dentro dela, crie um **Project** (ex.: `odontoprev`).  
+3. No menu esquerdo: **Pipelines** → **New pipeline**.  
+4. Escolha **GitHub** (autorize o GitHub se pedir) e selecione o repositório **odontoprev**.  
+5. Quando perguntar o tipo: **Existing Azure Pipelines YAML file**.  
+6. Branch **main** e caminho do arquivo: **`/azure-pipelines.yml`** → **Continue** → **Save and run**.  
+7. Espere o pipeline **CI** terminar em verde (Maven + Docker build).
+
+### Como “rodar de novo” o pipeline (para vídeo ou professor)
+
+1. **Pipelines** → clique no nome do pipeline.  
+2. Botão **Run pipeline** (canto superior direito) → **Run**.
+
+### Como ativar o **CD** (só depois que ACR + Web App existirem)
+
+1. No Azure DevOps: **Project settings** (engrenagem) → **Service connections** → crie:
+   - uma conexão **Azure Resource Manager** (sua subscription Azure);
+   - uma conexão **Docker Registry** apontando para o **ACR**.  
+2. No pipeline: **Edit** → **Variables** → adicione (nomes **iguais** aos do YAML):
+
+| Nome da variável | Valor (exemplo / o que é) |
+|------------------|---------------------------|
+| `DeployCDN` | `true` (liga o estágio CD) |
+| `azureSubscription` | **nome exato** da service connection ARM que você criou |
+| `acrServiceConnection` | **nome exato** da service connection do Docker Registry (ACR) |
+| `acrLoginServer` | ex.: `meuacr.azurecr.io` |
+| `webAppName` | nome do seu **App Service** Linux (Web App for Containers) |
+
+3. No **Azure Portal** → seu App Service → **Configuration** → **Application settings** → adicione **`NEON_PASSWORD`** com a senha do Neon (igual ao que você já faz no PC).  
+4. Rode o pipeline de novo. O CD faz **push** da imagem e atualiza o Web App.
+
+### Desenho + dissertação das etapas (PDF / entrega)
+
+Use o arquivo **[`docs/sprint2-pipeline-design.md`](docs/sprint2-pipeline-design.md)** (diagrama + texto por etapa). Copie para o PDF se o professor pedir “dissertação”.
+
+### Como o professor roda os **testes** no próprio PC (sem pipeline)
+
+Na pasta `odontoprev`:
+
+```powershell
+.\mvnw.cmd -B verify
+```
+
+(Linux/macOS: `bash ./mvnw -B verify`.)
+
+### O que gravar no **vídeo** (Sprint 2)
+
+1. Entrar no **Azure DevOps** e mostrar o projeto.  
+2. **Pipelines** → **Run pipeline** → mostrar o **CI** executando (Maven + Docker).  
+3. Se o **CD** estiver configurado, mostrar o estágio CD concluindo.  
+4. Abrir a aplicação no ar (URL do App Service ou `localhost`) e fazer um **CRUD** simples.  
+5. Abrir o **Neon** → **SQL Editor** → `SELECT * FROM paciente;` (e `consulta`) mostrando os dados **persistidos**.
 
 ---
 
@@ -144,7 +211,10 @@ Requisições prontas (REST Client): [`odontoprev/docs/api-crud.http`](odontopre
 
 ```
 .
-├── .github/workflows/ci.yml
+├── azure-pipelines.yml          ← Sprint 2: CI/CD Azure DevOps
+├── .github/workflows/ci.yml     ← CI espelhado no GitHub (opcional)
+├── docs/
+│   └── sprint2-pipeline-design.md  ← Desenho + dissertação das etapas
 ├── Readme.md
 └── odontoprev/
     ├── Dockerfile
@@ -156,11 +226,12 @@ Requisições prontas (REST Client): [`odontoprev/docs/api-crud.http`](odontopre
 
 ---
 
-## O que ainda é manual (entrega acadêmica)
+## O que ainda é manual (entrega acadêmica — Sprint 1 + 2)
 
-1. **Vídeo** (720p, áudio ou legenda): clone ou build da imagem → deploy Azure → CRUD na aplicação → dados visíveis no banco em nuvem.  
-2. **PDF** com nomes, RMs, link do GitHub e link do vídeo (acesso liberado ao professor).  
-3. Preencher **integrantes** abaixo e o **link do vídeo**.
+1. **Azure DevOps**: criar projeto, apontar pipeline para `azure-pipelines.yml`, rodar o pipeline (e configurar CD quando tiver Azure).  
+2. **Vídeo Sprint 2**: entrar no **Azure DevOps** → executar pipeline → app funcionando → **dados no banco na nuvem** (Neon com `SELECT`).  
+3. **PDF** (item 7): nomes, **RM**, link **GitHub**, link **YouTube**.  
+4. Preencher **integrantes** abaixo e o **link do vídeo**.
 
 | Nome | RM | Turma |
 |------|-----|--------|
