@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head><meta charset="UTF-8"><title>Paciente</title></head>
+<body style="font-family:sans-serif;max-width:600px;margin:40px auto;">
+  <h1>Paciente</h1>
+  <form th:action="@{/pacientes}" th:object="${paciente}" method="post">
+    <input type="hidden" th:field="*{id}"/>
+    <p>Nome:<br><input type="text" th:field="*{nome}" style="width:100%"></p>
+    <p>CPF:<br><input type="text" th:field="*{cpf}" style="width:100%"></p>
+    <p>Email:<br><input type="email" th:field="*{email}" style="width:100%"></p>
+    <p>Telefone:<br><input type="text" th:field="*{telefone}" style="width:100%"></p>
+    <p>Data de Nascimento:<br><input type="date" th:field="*{dataNascimento}"></p>
+    <button type="submit">Salvar</button>
+    <a th:href="@{/pacientes}">Cancelar</a>
+  </form>
+</body>
+</html>

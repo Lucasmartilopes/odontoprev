@@ -1,0 +1,23 @@
+{
+  "descricao": "Exemplos de corpo JSON para CRUD via API REST (Swagger: /swagger-ui/index.html)",
+  "baseUrlExemplo": "http://localhost:8080",
+  "paciente": {
+    "criarOuAtualizar": {
+      "nome": "Maria Silva",
+      "cpf": "123.456.789-09",
+      "email": "maria@email.com",
+      "telefone": "(11) 98888-7777",
+      "dataNascimento": "1992-03-15"
+    }
+  },
+  "consulta": {
+    "criarOuAtualizar": {
+      "pacienteId": 1,
+      "dataHora": "2026-05-20T14:30:00",
+      "procedimento": "Limpeza e profilaxia",
+      "dentista": "Dr. João Alves",
+      "status": "AGENDADA"
+    },
+    "statusPermitidos": ["AGENDADA", "REALIZADA", "CANCELADA"]
+  }
+}

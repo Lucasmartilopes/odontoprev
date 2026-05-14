@@ -1,0 +1,15 @@
+# Banco Neon — você só precisa da SENHA (não envie senha por e-mail/chat).
+#
+# PowerShell (na pasta odontoprev onde está o mvnw.cmd):
+#   $env:NEON_PASSWORD="COLE_AQUI_A_SENHA_DO_NEON"
+#   .\mvnw.cmd spring-boot:run
+#
+# Bash:
+#   export NEON_PASSWORD="COLE_AQUI_A_SENHA_DO_NEON"
+#   ./mvnw spring-boot:run
+#
+# Azure App Service → Configuration → New application setting
+#   Name:  NEON_PASSWORD
+#   Value: (sua senha)
+#
+# URL e usuário já estão em src/main/resources/application.properties

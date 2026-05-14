@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head><meta charset="UTF-8"><title>Consulta</title></head>
+<body style="font-family:sans-serif;max-width:600px;margin:40px auto;">
+  <h1>Consulta</h1>
+  <form th:action="@{/consultas}" th:object="${consulta}" method="post">
+    <input type="hidden" th:field="*{id}"/>
+    <p>Paciente:<br>
+      <select th:field="*{paciente}">
+        <option th:each="p : ${pacientes}" th:value="${p.id}" th:text="${p.nome}"></option>
+      </select>
+    </p>
+    <p>Data/Hora:<br><input type="datetime-local" th:field="*{dataHora}"></p>
+    <p>Procedimento:<br><input type="text" th:field="*{procedimento}" style="width:100%"></p>
+    <p>Dentista:<br><input type="text" th:field="*{dentista}" style="width:100%"></p>
+    <p>Status:<br>
+      <select th:field="*{status}">
+        <option value="AGENDADA">AGENDADA</option>
+        <option value="REALIZADA">REALIZADA</option>
+        <option value="CANCELADA">CANCELADA</option>
+      </select>
+    </p>
+    <button type="submit">Salvar</button>
+    <a th:href="@{/consultas}">Cancelar</a>
+  </form>
+</body>
+</html>

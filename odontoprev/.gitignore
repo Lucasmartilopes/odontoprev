@@ -1,0 +1,9 @@
+target/
+.mvn/
+*.class
+*.jar
+*.war
+application-local.properties
+.idea/
+.vscode/
+*.iml

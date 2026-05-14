@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head><meta charset="UTF-8"><title>Pacientes</title></head>
+<body style="font-family:sans-serif;max-width:900px;margin:40px auto;">
+  <h1>Pacientes</h1>
+  <p><a th:href="@{/}">← Início</a> | <a th:href="@{/pacientes/novo}">+ Novo</a></p>
+  <table border="1" cellpadding="6" style="border-collapse:collapse;width:100%">
+    <thead><tr><th>ID</th><th>Nome</th><th>CPF</th><th>Email</th><th>Telefone</th><th>Nascimento</th><th>Ações</th></tr></thead>
+    <tbody>
+      <tr th:each="p : ${pacientes}">
+        <td th:text="${p.id}"></td>
+        <td th:text="${p.nome}"></td>
+        <td th:text="${p.cpf}"></td>
+        <td th:text="${p.email}"></td>
+        <td th:text="${p.telefone}"></td>
+        <td th:text="${p.dataNascimento}"></td>
+        <td>
+          <a th:href="@{/pacientes/editar/{id}(id=${p.id})}">Editar</a> |
+          <a th:href="@{/pacientes/excluir/{id}(id=${p.id})}" onclick="return confirm('Excluir?')">Excluir</a>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</body>
+</html>

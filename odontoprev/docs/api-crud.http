@@ -1,0 +1,68 @@
+### OdontoPrev — exemplos HTTP (REST Client / IntelliJ)
+@base = http://localhost:8080
+
+### Pacientes — listar
+GET {{base}}/api/pacientes
+
+### Pacientes — obter por id
+GET {{base}}/api/pacientes/1
+
+### Pacientes — criar
+POST {{base}}/api/pacientes
+Content-Type: application/json
+
+{
+  "nome": "Maria Silva",
+  "cpf": "123.456.789-09",
+  "email": "maria@email.com",
+  "telefone": "(11) 98888-7777",
+  "dataNascimento": "1992-03-15"
+}
+
+### Pacientes — atualizar
+PUT {{base}}/api/pacientes/1
+Content-Type: application/json
+
+{
+  "nome": "Maria Silva Santos",
+  "cpf": "123.456.789-09",
+  "email": "maria.santos@email.com",
+  "telefone": "(11) 98888-7777",
+  "dataNascimento": "1992-03-15"
+}
+
+### Pacientes — excluir
+DELETE {{base}}/api/pacientes/1
+
+### Consultas — listar
+GET {{base}}/api/consultas
+
+### Consultas — obter por id
+GET {{base}}/api/consultas/1
+
+### Consultas — criar
+POST {{base}}/api/consultas
+Content-Type: application/json
+
+{
+  "pacienteId": 1,
+  "dataHora": "2026-05-20T14:30:00",
+  "procedimento": "Limpeza e profilaxia",
+  "dentista": "Dr. João Alves",
+  "status": "AGENDADA"
+}
+
+### Consultas — atualizar
+PUT {{base}}/api/consultas/1
+Content-Type: application/json
+
+{
+  "pacienteId": 1,
+  "dataHora": "2026-05-21T09:00:00",
+  "procedimento": "Restauração",
+  "dentista": "Dra. Ana Costa",
+  "status": "REALIZADA"
+}
+
+### Consultas — excluir
+DELETE {{base}}/api/consultas/1
