@@ -23,7 +23,7 @@ jobs:
           cache-dependency-path: odontoprev/pom.xml
 
       - name: Maven verify
-        run: ./mvnw -B verify
+        run: bash ./mvnw -B verify
 
       - name: Docker build
         run: docker build -t odontoprev:ci .
