@@ -24,6 +24,9 @@ pool:
 
 variables:
   mavenFolder: odontoprev
+  # CD desligado por padrão. No Azure DevOps: Pipeline → Edit → Variables →
+  # crie/sobrescreva DeployCDN = true (e as variáveis do CD) para publicar no Azure.
+  DeployCDN: "false"
 
 stages:
   # ---------------------------------------------------------------------------
