@@ -93,7 +93,8 @@ GitHub Actions (`.github/workflows/ci.yml`): `mvn verify` + **Docker build** (ú
 
 ## Sprint 2 — Azure DevOps (passo a passo simples)
 
-A disciplina pede **pipeline CI/CD no Azure DevOps** (não basta só o GitHub). O arquivo principal é **`azure-pipelines.yml`** na raiz do repositório.
+A disciplina pede **pipeline CI/CD no Azure DevOps** (não basta só o GitHub). O arquivo principal é **`azure-pipelines.yml`** (só **CI** — build e testes).  
+O deploy (**CD**) fica em **`azure-pipelines-cd.yml`** — use **depois** de criar as Service connections (segundo pipeline no DevOps).
 
 ### O que você precisa ter
 

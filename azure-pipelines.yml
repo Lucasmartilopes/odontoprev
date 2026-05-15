@@ -1,17 +1,10 @@
 # =============================================================================
-# OdontoPrev — Pipeline Azure DevOps (Sprint 2: CI + CD)
+# OdontoPrev — CI (integração contínua) — Azure DevOps Sprint 2
 # =============================================================================
-# Como criar no Azure DevOps:
-#   1) Pipelines → New pipeline → GitHub (ou Azure Repos) → escolha este repo
-#   2) Existing Azure Pipelines YAML file → Branch main → Path: /azure-pipelines.yml
-#   3) Save and run
+# Pipelines → Existing YAML → Branch main → /azure-pipelines.yml → Run
 #
-# Variáveis (Pipeline → Edit → Variables) — opcionais até ativar o CD:
-#   DeployCDN = true   (só quando ACR + Web App + service connections estiverem prontos)
-#   azureSubscription = nome da Service connection ARM (Azure Resource Manager)
-#   acrServiceConnection = nome da Service connection Docker Registry (ACR)
-#   acrLoginServer = ex.: meuacr.azurecr.io
-#   webAppName = nome do App Service Linux (Web App for Containers)
+# Deploy no Azure (CD): depois de criar Service connections, use
+# /azure-pipelines-cd.yml (segundo pipeline) — ver Readme.md
 # =============================================================================
 
 trigger:
@@ -24,14 +17,8 @@ pool:
 
 variables:
   mavenFolder: odontoprev
-  # CD desligado por padrão. No Azure DevOps: Pipeline → Edit → Variables →
-  # crie/sobrescreva DeployCDN = true (e as variáveis do CD) para publicar no Azure.
-  DeployCDN: "false"
 
 stages:
-  # ---------------------------------------------------------------------------
-  # CI — Integração contínua (sempre roda no push em main)
-  # ---------------------------------------------------------------------------
   - stage: CI
     displayName: CI — Build, testes e imagem Docker
     jobs:
@@ -63,36 +50,3 @@ stages:
               repository: odontoprev
               tags: |
                 $(Build.BuildId)
-
-  # ---------------------------------------------------------------------------
-  # CD — Entrega contínua (só se variável DeployCDN = true)
-  # ---------------------------------------------------------------------------
-  - stage: CD
-    displayName: CD — Push ACR + deploy App Service (containers)
-    dependsOn: CI
-    condition: and(succeeded(), eq(variables['DeployCDN'], 'true'))
-    jobs:
-      - job: PushAndDeploy
-        displayName: Push imagem e atualizar Web App
-        steps:
-          - checkout: self
-            fetchDepth: 0
-
-          - task: Docker@2
-            displayName: Build e push para Azure Container Registry
-            inputs:
-              command: buildAndPush
-              Dockerfile: "$(Build.SourcesDirectory)/$(mavenFolder)/Dockerfile"
-              buildContext: "$(Build.SourcesDirectory)/$(mavenFolder)"
-              containerRegistry: "$(acrServiceConnection)"
-              repository: odontoprev
-              tags: |
-                $(Build.BuildId)
-                latest
-
-          - task: AzureWebAppContainer@1
-            displayName: Deploy no Azure App Service (Linux / container)
-            inputs:
-              azureSubscription: "$(azureSubscription)"
-              appName: "$(webAppName)"
-              containers: "$(acrLoginServer)/odontoprev:$(Build.BuildId)"
