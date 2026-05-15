@@ -41,11 +41,12 @@ stages:
           - checkout: self
             fetchDepth: 0
 
-          - task: UseJavaVersion@0
+          - task: JavaToolInstaller@0
             displayName: Instalar JDK 17
             inputs:
               versionSpec: "17"
               jdkArchitectureOption: x64
+              jdkSourceOption: PreInstalled
 
           - script: |
               set -e
