@@ -57,7 +57,7 @@ Texto de apoio: [`odontoprev/docs/env-exemplo.txt`](odontoprev/docs/env-exemplo.
 | Onde | O que fazer |
 |------|-------------|
 | Seu PC (PowerShell) | `$env:NEON_PASSWORD="sua_senha"` antes de rodar o `mvnw` |
-| Azure App Service | **Configuration** → criar `NEON_PASSWORD` = sua senha |
+| Azure App Service | **Variáveis de ambiente** → `NEON_PASSWORD`, `SPRING_DATASOURCE_PASSWORD` (mesma senha), `WEBSITES_PORT` = `8080`. Se o app usar imagem em **ACR privado**, adicione `DOCKER_REGISTRY_SERVER_URL`, `DOCKER_REGISTRY_SERVER_USERNAME` e `DOCKER_REGISTRY_SERVER_PASSWORD` (valores em **Chaves de acesso** do Container Registry). |
 
 ### PowerShell (sessão atual)
 
@@ -117,23 +117,23 @@ O deploy (**CD**) fica em **`azure-pipelines-cd.yml`** — use **depois** de cri
 1. **Pipelines** → clique no nome do pipeline.  
 2. Botão **Run pipeline** (canto superior direito) → **Run**.
 
-### Como ativar o **CD** (só depois que ACR + Web App existirem)
+### Como rodar o **CD** (deploy no Azure — segundo pipeline)
 
-1. No Azure DevOps: **Project settings** (engrenagem) → **Service connections** → crie:
-   - uma conexão **Azure Resource Manager** (sua subscription Azure);
-   - uma conexão **Docker Registry** apontando para o **ACR**.  
-2. No pipeline: **Edit** → **Variables** → adicione (nomes **iguais** aos do YAML):
+1. **Project settings** → **Service connections**: crie **Azure Resource Manager** e **Docker Registry** (ACR), com permissão para os pipelines.  
+2. **Pipelines** → **New pipeline** → mesmo repositório GitHub → YAML **`/azure-pipelines-cd.yml`** (arquivo **diferente** do CI).  
+3. No pipeline de CD: **Edit** → **Variables** → crie **exatamente** estas 4 (os nomes são os do YAML):
 
-| Nome da variável | Valor (exemplo / o que é) |
-|------------------|---------------------------|
-| `DeployCDN` | `true` (liga o estágio CD) |
-| `azureSubscription` | **nome exato** da service connection ARM que você criou |
-| `acrServiceConnection` | **nome exato** da service connection do Docker Registry (ACR) |
-| `acrLoginServer` | ex.: `meuacr.azurecr.io` |
-| `webAppName` | nome do seu **App Service** Linux (Web App for Containers) |
+| Nome da variável | Valor (exemplo) |
+|------------------|-----------------|
+| `azureSubscription` | Nome da service connection ARM (ex.: `sc-azure-odontoprev`) |
+| `acrServiceConnection` | Nome da service connection do ACR (ex.: `sc-acr-odontoprev`) |
+| `acrLoginServer` | Servidor do ACR (ex.: `acrodontoprevlucas.azurecr.io`) |
+| `webAppName` | Nome do Web App (ex.: `odontoprev-lucas123`) |
 
-3. No **Azure Portal** → seu App Service → **Configuration** → **Application settings** → adicione **`NEON_PASSWORD`** com a senha do Neon (igual ao que você já faz no PC).  
-4. Rode o pipeline de novo. O CD faz **push** da imagem e atualiza o Web App.
+4. No **Azure Portal** → Web App → **Variáveis de ambiente**: senha do Neon + porta + credenciais do ACR (ver tabela na seção “Configuração”).  
+5. **Run pipeline** no pipeline de CD e aguarde concluir em verde.
+
+> **Nota:** o pipeline **`azure-pipelines.yml`** contém **apenas CI** (não use variável `DeployCDN` nele — isso era de uma versão antiga).
 
 ### Desenho + dissertação das etapas (PDF / entrega)
 
@@ -154,7 +154,7 @@ Na pasta `odontoprev`:
 1. Entrar no **Azure DevOps** e mostrar o projeto.  
 2. **Pipelines** → **Run pipeline** → mostrar o **CI** executando (Maven + Docker).  
 3. Se o **CD** estiver configurado, mostrar o estágio CD concluindo.  
-4. Abrir a aplicação no ar (URL do App Service ou `localhost`) e fazer um **CRUD** simples.  
+4. Abrir a aplicação **na URL do Azure App Service** (não use localhost se o professor exigir nuvem) e fazer um **CRUD** simples.  
 5. Abrir o **Neon** → **SQL Editor** → `SELECT * FROM paciente;` (e `consulta`) mostrando os dados **persistidos**.
 
 ---
@@ -166,7 +166,7 @@ cd odontoprev
 docker build -t odontoprev:latest .
 ```
 
-No Azure, defina **`NEON_PASSWORD`** nas **Application settings** da Web App (URL e usuário já vêm do `application.properties` embutido no JAR).
+No Azure, defina **`NEON_PASSWORD`**, **`SPRING_DATASOURCE_PASSWORD`** (mesma senha), **`WEBSITES_PORT`** = `8080` e, se usar ACR privado, as variáveis **`DOCKER_REGISTRY_SERVER_*`** (veja tabela acima). A URL JDBC e o usuário Neon vêm do `application.properties` no JAR.
 
 ---
 
@@ -212,7 +212,8 @@ Requisições prontas (REST Client): [`odontoprev/docs/api-crud.http`](odontopre
 
 ```
 .
-├── azure-pipelines.yml          ← Sprint 2: CI/CD Azure DevOps
+├── azure-pipelines.yml          ← Sprint 2: só CI (Maven + Docker build)
+├── azure-pipelines-cd.yml       ← Sprint 2: CD (push ACR + deploy App Service)
 ├── .github/workflows/ci.yml     ← CI espelhado no GitHub (opcional)
 ├── docs/
 │   └── sprint2-pipeline-design.md  ← Desenho + dissertação das etapas
@@ -229,10 +230,9 @@ Requisições prontas (REST Client): [`odontoprev/docs/api-crud.http`](odontopre
 
 ## O que ainda é manual (entrega acadêmica — Sprint 1 + 2)
 
-1. **Azure DevOps**: criar projeto, apontar pipeline para `azure-pipelines.yml`, rodar o pipeline (e configurar CD quando tiver Azure).  
-2. **Vídeo Sprint 2**: entrar no **Azure DevOps** → executar pipeline → app funcionando → **dados no banco na nuvem** (Neon com `SELECT`).  
-3. **PDF** (item 7): nomes, **RM**, link **GitHub**, link **YouTube**.  
-4. Preencher **integrantes** abaixo e o **link do vídeo**.
+1. **Vídeo**: Azure DevOps (pipelines + **Run**) → site no **Azure** → CRUD → Neon com `SELECT` · **720p** + áudio ou legenda.  
+2. **PDF**: nomes, **RM**, link **GitHub**, link **YouTube** (acesso ao professor).  
+3. Preencher **integrantes** e **link do vídeo** na tabela abaixo.
 
 | Nome | RM | Turma |
 |------|-----|--------|
