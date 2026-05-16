@@ -1,85 +1,77 @@
 # OdontoPrev — gestão de pacientes e consultas
 
-Aplicação **Spring Boot 3** (Java 17) com **Thymeleaf**, **CRUD** de **Paciente** e **Consulta** (1:N), **camada de serviços de aplicação**, API REST em `/api/**`, persistência em **PostgreSQL na nuvem** (ex.: Neon) e documentação para **deploy no Azure**.
+Aplicação **Spring Boot 3** (Java 17) com **Thymeleaf**, **CRUD** de **Paciente** e **Consulta** (1:N), camada de serviços (`PacienteService`, `ConsultaService`), API REST em `/api/**`, PostgreSQL na nuvem (ex.: Neon) e pipelines para build/deploy no Azure.
 
-> O código Maven fica na pasta **`odontoprev/`** (monorepositório com raiz Git aqui em cima).
-
----
-
-## Descrição da solução
-
-Sistema web para clínica odontológica: cadastro de pacientes e agenda de consultas com validação (CPF único, status `AGENDADA` / `REALIZADA` / `CANCELADA`). Os **serviços de aplicação** (`PacienteService`, `ConsultaService`) concentram regras de uso dos casos e os controllers (MVC e REST) apenas orquestram HTTP.
+O código Maven está em **`odontoprev/`**.
 
 ---
 
-## Benefícios para o negócio
+## Descrição
 
-- Menos erro operacional (validações e dados centralizados).
-- Acesso remoto à agenda e ao cadastro (nuvem).
-- Histórico de consultas por paciente para continuidade do tratamento.
-- Base para evoluir para app mobile ou integrações.
+Sistema web para clínica odontológica: cadastro de pacientes e agenda de consultas (CPF único, status `AGENDADA` / `REALIZADA` / `CANCELADA`). Controllers MVC e REST orquestram HTTP; regras de caso de uso ficam nos serviços.
 
 ---
 
 ## Arquitetura
 
-Diagrama em [`odontoprev/docs/arquitetura_odontoprev_cloud.svg`](odontoprev/docs/arquitetura_odontoprev_cloud.svg).
+Diagrama: [`odontoprev/docs/arquitetura_odontoprev_cloud.svg`](odontoprev/docs/arquitetura_odontoprev_cloud.svg).
 
-Fluxo resumido: navegador → Azure App Service (container) → Spring Boot → PostgreSQL na nuvem.
+Fluxo: cliente → Azure App Service (container) → Spring Boot → PostgreSQL.
 
 ---
 
-## Banco de dados (DDL)
+## Banco de dados
 
-Arquivo de entrega: [`odontoprev/ddl.sql`](odontoprev/ddl.sql) (tabelas, PKs, FK, índice e **comentários** `COMMENT ON`).
+- DDL: [`odontoprev/ddl.sql`](odontoprev/ddl.sql)
+- Dados de exemplo: [`odontoprev/docs/script.sql`](odontoprev/docs/script.sql)
 
-Script auxiliar com dados de exemplo: [`odontoprev/docs/script.sql`](odontoprev/docs/script.sql).
-
-**Importante:** em produção **não** use H2. O H2 aparece **somente** no perfil `test` para CI (`src/test/resources/application-test.properties`).
+Em produção use PostgreSQL. O perfil **`test`** usa H2 em memória (`src/test/resources/application-test.properties`).
 
 ---
 
 ## Pré-requisitos
 
 - Java **17**+
-- Maven (ou use o wrapper em `odontoprev/mvnw`)
-- Conta em provedor **PostgreSQL na nuvem** (Neon, Azure Database for PostgreSQL, etc.)
+- Maven ou `odontoprev/mvnw`
+- Instância PostgreSQL (Neon, Azure Database for PostgreSQL, etc.)
 
 ---
 
-## Configuração (só a senha)
+## Configuração
 
-A **URL** e o **usuário** do Neon já estão em `odontoprev/src/main/resources/application.properties`.  
-Você **não** coloca senha no Git: use a variável **`NEON_PASSWORD`** (local ou Azure).
+URL e usuário do banco em `odontoprev/src/main/resources/application.properties`. **Não** commite senha: use **`NEON_PASSWORD`** (e no Azure, também **`SPRING_DATASOURCE_PASSWORD`** com o mesmo valor).
 
-Texto de apoio: [`odontoprev/docs/env-exemplo.txt`](odontoprev/docs/env-exemplo.txt).
+Referência: [`odontoprev/docs/env-exemplo.txt`](odontoprev/docs/env-exemplo.txt).
 
-| Onde | O que fazer |
-|------|-------------|
-| Seu PC (PowerShell) | `$env:NEON_PASSWORD="sua_senha"` antes de rodar o `mvnw` |
-| Azure App Service | **Variáveis de ambiente** → `NEON_PASSWORD`, `SPRING_DATASOURCE_PASSWORD` (mesma senha), `WEBSITES_PORT` = `8080`. Se o app usar imagem em **ACR privado**, adicione `DOCKER_REGISTRY_SERVER_URL`, `DOCKER_REGISTRY_SERVER_USERNAME` e `DOCKER_REGISTRY_SERVER_PASSWORD` (valores em **Chaves de acesso** do Container Registry). |
+| Ambiente | Variáveis |
+|----------|-----------|
+| Local (PowerShell) | `$env:NEON_PASSWORD="..."` antes de `mvnw` |
+| Azure App Service | `NEON_PASSWORD`, `SPRING_DATASOURCE_PASSWORD`, `WEBSITES_PORT=8080`. Com imagem em **ACR privado**: `DOCKER_REGISTRY_SERVER_URL`, `DOCKER_REGISTRY_SERVER_USERNAME`, `DOCKER_REGISTRY_SERVER_PASSWORD` |
 
-### PowerShell (sessão atual)
+### Executar localmente
+
+**PowerShell**
 
 ```powershell
 cd odontoprev
-$env:NEON_PASSWORD="SUA_SENHA_DO_NEON"
+$env:NEON_PASSWORD="SUA_SENHA"
 .\mvnw.cmd spring-boot:run
 ```
 
-### Bash
+**Bash**
 
 ```bash
 cd odontoprev
-export NEON_PASSWORD="SUA_SENHA_DO_NEON"
+export NEON_PASSWORD="SUA_SENHA"
 ./mvnw spring-boot:run
 ```
 
-Aplicação: **http://localhost:8080** · Swagger: **http://localhost:8080/swagger-ui/index.html**
+- App: `http://localhost:8080`
+- Swagger: `http://localhost:8080/swagger-ui/index.html`
 
 ---
 
-## Testes e build (CI)
+## Testes e build
 
 Na pasta `odontoprev`:
 
@@ -87,75 +79,33 @@ Na pasta `odontoprev`:
 .\mvnw.cmd -B verify
 ```
 
-GitHub Actions (`.github/workflows/ci.yml`): `mvn verify` + **Docker build** (útil como CI espelhado no GitHub).
+CI no GitHub: `.github/workflows/ci.yml` (Maven + build da imagem Docker).
 
 ---
 
-## Sprint 2 — Azure DevOps (passo a passo simples)
+## Azure DevOps
 
-A disciplina pede **pipeline CI/CD no Azure DevOps** (não basta só o GitHub). O arquivo principal é **`azure-pipelines.yml`** (só **CI** — build e testes).  
-O deploy (**CD**) fica em **`azure-pipelines-cd.yml`** — use **depois** de criar as Service connections (segundo pipeline no DevOps).
+Dois YAMLs na raiz do repositório:
 
-### O que você precisa ter
+| Arquivo | Função |
+|---------|--------|
+| `azure-pipelines.yml` | CI: Maven + Docker build |
+| `azure-pipelines-cd.yml` | CD: push da imagem para ACR + deploy no App Service |
 
-1. Conta no **Azure DevOps**: [https://dev.azure.com](https://dev.azure.com) (pode usar a mesma conta Microsoft do Azure).  
-2. Seu código no **GitHub** (já está).  
-3. (Opcional para o estágio **CD**) Conta **Azure** com App Service + ACR + *service connections* — só quando for gravar deploy automático.
+**CI:** em Azure DevOps → Pipelines → New pipeline → GitHub → *Existing Azure Pipelines YAML file* → branch `main` → `/azure-pipelines.yml` → Save and run.
 
-### Passos no Azure DevOps (faça nesta ordem)
+**Reexecutar:** Pipelines → pipeline desejado → **Run pipeline**.
 
-1. Entre em **dev.azure.com** e crie uma **Organization** (se ainda não tiver).  
-2. Dentro dela, crie um **Project** (ex.: `odontoprev`).  
-3. No menu esquerdo: **Pipelines** → **New pipeline**.  
-4. Escolha **GitHub** (autorize o GitHub se pedir) e selecione o repositório **odontoprev**.  
-5. Quando perguntar o tipo: **Existing Azure Pipelines YAML file**.  
-6. Branch **main** e caminho do arquivo: **`/azure-pipelines.yml`** → **Continue** → **Save and run**.  
-7. Espere o pipeline **CI** terminar em verde (Maven + Docker build).
+**CD:** novo pipeline apontando para `/azure-pipelines-cd.yml`. Variáveis do pipeline (nomes fixos no YAML):
 
-### Como “rodar de novo” o pipeline (para vídeo ou professor)
+| Variável | Exemplo |
+|----------|---------|
+| `azureSubscription` | Nome da service connection ARM |
+| `acrServiceConnection` | Nome da service connection Docker/ACR |
+| `acrLoginServer` | Ex.: `meuacr.azurecr.io` |
+| `webAppName` | Nome do Web App |
 
-1. **Pipelines** → clique no nome do pipeline.  
-2. Botão **Run pipeline** (canto superior direito) → **Run**.
-
-### Como rodar o **CD** (deploy no Azure — segundo pipeline)
-
-1. **Project settings** → **Service connections**: crie **Azure Resource Manager** e **Docker Registry** (ACR), com permissão para os pipelines.  
-2. **Pipelines** → **New pipeline** → mesmo repositório GitHub → YAML **`/azure-pipelines-cd.yml`** (arquivo **diferente** do CI).  
-3. No pipeline de CD: **Edit** → **Variables** → crie **exatamente** estas 4 (os nomes são os do YAML):
-
-| Nome da variável | Valor (exemplo) |
-|------------------|-----------------|
-| `azureSubscription` | Nome da service connection ARM (ex.: `sc-azure-odontoprev`) |
-| `acrServiceConnection` | Nome da service connection do ACR (ex.: `sc-acr-odontoprev`) |
-| `acrLoginServer` | Servidor do ACR (ex.: `acrodontoprevlucas.azurecr.io`) |
-| `webAppName` | Nome do Web App (ex.: `odontoprev-lucas123`) |
-
-4. No **Azure Portal** → Web App → **Variáveis de ambiente**: senha do Neon + porta + credenciais do ACR (ver tabela na seção “Configuração”).  
-5. **Run pipeline** no pipeline de CD e aguarde concluir em verde.
-
-> **Nota:** o pipeline **`azure-pipelines.yml`** contém **apenas CI** (não use variável `DeployCDN` nele — isso era de uma versão antiga).
-
-### Desenho + dissertação das etapas (PDF / entrega)
-
-Use o arquivo **[`docs/sprint2-pipeline-design.md`](docs/sprint2-pipeline-design.md)** (diagrama + texto por etapa). Copie para o PDF se o professor pedir “dissertação”.
-
-### Como o professor roda os **testes** no próprio PC (sem pipeline)
-
-Na pasta `odontoprev`:
-
-```powershell
-.\mvnw.cmd -B verify
-```
-
-(Linux/macOS: `bash ./mvnw -B verify`.)
-
-### O que gravar no **vídeo** (Sprint 2)
-
-1. Entrar no **Azure DevOps** e mostrar o projeto.  
-2. **Pipelines** → **Run pipeline** → mostrar o **CI** executando (Maven + Docker).  
-3. Se o **CD** estiver configurado, mostrar o estágio CD concluindo.  
-4. Abrir a aplicação **na URL do Azure App Service** (não use localhost se o professor exigir nuvem) e fazer um **CRUD** simples.  
-5. Abrir o **Neon** → **SQL Editor** → `SELECT * FROM paciente;` (e `consulta`) mostrando os dados **persistidos**.
+Documentação opcional do fluxo: [`docs/sprint2-pipeline-design.md`](docs/sprint2-pipeline-design.md).
 
 ---
 
@@ -166,7 +116,7 @@ cd odontoprev
 docker build -t odontoprev:latest .
 ```
 
-No Azure, defina **`NEON_PASSWORD`**, **`SPRING_DATASOURCE_PASSWORD`** (mesma senha), **`WEBSITES_PORT`** = `8080` e, se usar ACR privado, as variáveis **`DOCKER_REGISTRY_SERVER_*`** (veja tabela acima). A URL JDBC e o usuário Neon vêm do `application.properties` no JAR.
+No Azure, configure as variáveis de ambiente da tabela acima; JDBC e usuário vêm do `application.properties` empacotado.
 
 ---
 
@@ -175,36 +125,36 @@ No Azure, defina **`NEON_PASSWORD`**, **`SPRING_DATASOURCE_PASSWORD`** (mesma se
 | Método | Rota | Descrição |
 |--------|------|-----------|
 | GET | `/` | Início |
-| GET | `/pacientes` | Lista pacientes |
-| GET | `/pacientes/novo` | Novo paciente |
-| POST | `/pacientes` | Salva paciente |
+| GET | `/pacientes` | Lista |
+| GET | `/pacientes/novo` | Novo |
+| POST | `/pacientes` | Salva |
 | GET | `/pacientes/editar/{id}` | Edição |
 | GET | `/pacientes/excluir/{id}` | Exclui |
-| GET | `/consultas` | Lista consultas |
-| GET | `/consultas/nova` | Nova consulta |
-| POST | `/consultas` | Salva consulta |
+| GET | `/consultas` | Lista |
+| GET | `/consultas/nova` | Nova |
+| POST | `/consultas` | Salva |
 | GET | `/consultas/editar/{id}` | Edição |
 | GET | `/consultas/excluir/{id}` | Exclui |
 
 ---
 
-## API REST + JSON (testes do professor)
+## API REST
 
 | Método | Rota | Descrição |
 |--------|------|-----------|
 | GET | `/api/pacientes` | Lista |
 | GET | `/api/pacientes/{id}` | Detalhe |
-| POST | `/api/pacientes` | Cria (JSON corpo) |
+| POST | `/api/pacientes` | Cria |
 | PUT | `/api/pacientes/{id}` | Atualiza |
 | DELETE | `/api/pacientes/{id}` | Remove |
-| GET | `/api/consultas` | Lista (com nome do paciente) |
+| GET | `/api/consultas` | Lista |
 | GET | `/api/consultas/{id}` | Detalhe |
 | POST | `/api/consultas` | Cria |
 | PUT | `/api/consultas/{id}` | Atualiza |
 | DELETE | `/api/consultas/{id}` | Remove |
 
-Exemplos de corpo JSON: [`odontoprev/docs/crud-exemplos.json`](odontoprev/docs/crud-exemplos.json)  
-Requisições prontas (REST Client): [`odontoprev/docs/api-crud.http`](odontoprev/docs/api-crud.http)
+Exemplos JSON: [`odontoprev/docs/crud-exemplos.json`](odontoprev/docs/crud-exemplos.json)  
+HTTP: [`odontoprev/docs/api-crud.http`](odontoprev/docs/api-crud.http)
 
 ---
 
@@ -212,11 +162,11 @@ Requisições prontas (REST Client): [`odontoprev/docs/api-crud.http`](odontopre
 
 ```
 .
-├── azure-pipelines.yml          ← Sprint 2: só CI (Maven + Docker build)
-├── azure-pipelines-cd.yml       ← Sprint 2: CD (push ACR + deploy App Service)
-├── .github/workflows/ci.yml     ← CI espelhado no GitHub (opcional)
+├── azure-pipelines.yml
+├── azure-pipelines-cd.yml
+├── .github/workflows/ci.yml
 ├── docs/
-│   └── sprint2-pipeline-design.md  ← Desenho + dissertação das etapas
+│   └── sprint2-pipeline-design.md
 ├── Readme.md
 └── odontoprev/
     ├── Dockerfile
@@ -225,17 +175,6 @@ Requisições prontas (REST Client): [`odontoprev/docs/api-crud.http`](odontopre
     ├── pom.xml
     └── src/
 ```
-
----
-
-#
-
-| Nome | RM | Turma |
-|------|-----|--------|
-| *(preencher)* | | |
-| *(preencher)* | | |
-
-**Vídeo:** *(cole o link público do YouTube/Drive quando estiver pronto)*
 
 ---
 
