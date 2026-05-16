@@ -228,11 +228,7 @@ Requisições prontas (REST Client): [`odontoprev/docs/api-crud.http`](odontopre
 
 ---
 
-## O que ainda é manual (entrega acadêmica — Sprint 1 + 2)
-
-1. **Vídeo**: Azure DevOps (pipelines + **Run**) → site no **Azure** → CRUD → Neon com `SELECT` · **720p** + áudio ou legenda.  
-2. **PDF**: nomes, **RM**, link **GitHub**, link **YouTube** (acesso ao professor).  
-3. Preencher **integrantes** e **link do vídeo** na tabela abaixo.
+#
 
 | Nome | RM | Turma |
 |------|-----|--------|
