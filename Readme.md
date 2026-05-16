@@ -4,6 +4,8 @@ Aplicação **Spring Boot 3** (Java 17) com **Thymeleaf**, **CRUD** de **Pacient
 
 O código Maven está em **`odontoprev/`**.
 
+**Vídeo (demonstração):** [https://youtu.be/4TQRyn9KSfY](https://youtu.be/4TQRyn9KSfY)
+
 ---
 
 ## Descrição
